@@ -31,7 +31,7 @@ def mean(vectors):
     return vector.Vector(attr, '')
 
 
-def kmeans_show(clusters, x, y, xlabel, ylabel):
+def kmeans_show(clusters, x, y, xlabel, ylabel, title):
     colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
     i = 0
     for key in clusters.keys():
@@ -42,6 +42,7 @@ def kmeans_show(clusters, x, y, xlabel, ylabel):
         # end for
         i = (i + 1) % len(colors)
     # end for
+    plt.title(title)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.show()
@@ -94,7 +95,7 @@ def k_means(data_set, k, max_iter):
         # end for
         if not changed:
             # 聚类中心不再变化, 算法结束
-            print('iteration times = %d. break' % n)
+            print('iteration times = %d' % n)
             clusters.clear()
             for cluster in tmp_clusters:
                 clusters[cluster[0]] = cluster[1]
@@ -108,11 +109,35 @@ def k_means(data_set, k, max_iter):
     return clusters
 
 
+# C1={x,x,x,o,x,o}, 聚类C1中x最多, 把C1看成是x的聚类, 其中x有4个
+# C2={x,-,o,-,o,-}, 聚类C2中-最多, 把C2看成是-的聚类, 其中-有3个
+# C3={x,x,x,x,x,o}, 聚类C3中x最多, 把C3看成是x的聚类, 其中x有5个
+# 准确率 = (4+3+5) / (|C1|+|C2|+|C3|)
+def accuracy(clusters):
+    correct = 0
+    for value in clusters.values():
+        stat = {}
+        for x in value:
+            if x.label in stat.keys():
+                stat[x.label] += 1
+            else:
+                stat[x.label] = 1
+        # end for
+        stat = dict(zip(stat.values(), stat.keys()))  # key和value互换
+        correct += max(stat)  # max(stat)返回的是最大的key
+        # key = max(stat)
+        # print('%s: %d/%d' % (str(stat[key]), key, len(value)))
+    # end for
+    # print('total: %d' % sum(len(x) for x in clusters.values()))
+    return correct / sum(len(x) for x in clusters.values())
+
+
 def main():
     data_set = load_data('iris.data', ',')
     clusters = k_means(data_set, 3, 100)
-    kmeans_show(clusters, 0, 1, 'sepal_length', 'sepal_width')
-    kmeans_show(clusters, 2, 3, 'petal_length', 'petal_width')
+    title = 'k-means (accuracy=%f)' % accuracy(clusters)
+    kmeans_show(clusters, 0, 1, 'sepal_length', 'sepal_width', title)
+    kmeans_show(clusters, 2, 3, 'petal_length', 'petal_width', title)
 
 
 if __name__ == '__main__':
